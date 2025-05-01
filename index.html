@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study Attendance Tracker</title>
+  <style>
+    /* Reset & Base */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen; background: #111; color: #eee; }
+    a, button { font-family: inherit; }
+
+    /* Container */
+    .container { max-width: 700px; margin: auto; padding: 2rem 1rem; display: flex; flex-direction: column; gap: 1.5rem; }
+    header { text-align: center; }
+    .logo { height: 36px; opacity: 0.8; }
+    h1 { font-size: 2rem; margin-top: 0.5rem; }
+    h2 { font-size: 1.25rem; margin: 1rem 0 0.5rem; }
+
+    /* Custom Select */
+    .custom-select { position: relative; }
+    .custom-select select {
+      appearance: none; -webkit-appearance: none;
+      width: 100%; padding: .75rem 1rem; border-radius: 8px; border: 1px solid #333;
+      background: #222; color: #eee; font-size: 1rem;
+      background-image: url('data:image/svg+xml;utf8,<svg fill="%23aaa" height="24" viewBox="0 0 24 24" width="24" xmlns="http://www.w3.org/2000/svg"><path d="M7 10l5 5 5-5z"/></svg>');
+      background-repeat: no-repeat; background-position: right 1rem center;
+    }
+    .custom-select select:focus { outline: none; border-color: #555; }
+
+    /* Buttons */
+    button {
+      background: #333; color: #fff; padding: .75rem 1.25rem; border: none; border-radius: 8px;
+      cursor: pointer; transition: background .2s, transform .2s;
+      font-size: 1rem;
+    }
+    button:hover { background: #444; transform: translateY(-2px); }
+
+    /* Panels */
+    #topics, #tasks { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: .75rem; }
+    #topics button { text-align: center; }
+    ul { list-style: disc inside; }
+
+    /* Table */
+    table { width: 100%; border-collapse: collapse; margin-top: 1rem; }
+    th, td { padding: .75rem; }
+    th { background: #222; text-align: left; }
+    tr:nth-child(even) { background: #1a1a1a; }
+
+    /* Responsive */
+    @media (max-width: 500px) { h1 { font-size: 1.5rem; } }
+
+    /* Animations */
+    .fade-in { animation: fadeIn .4s ease forwards; opacity: 0; }
+    @keyframes fadeIn { to { opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="fade-in" style="animation-delay:.1s">
+      <img src="https://cdn.jsdelivr.net/npm/simple-icons@v8/icons/apple.svg" alt="Logo" class="logo" />
+      <h1>Study Attendance Tracker</h1>
+    </header>
+
+    <div class="custom-select fade-in" style="animation-delay:.2s">
+      <label for="week-select">Select Week:</label>
+      <select id="week-select">
+        <option value="">-- Choose Week --</option>
+        <option value="1">Week 1</option>
+        <option value="2">Week 2</option>
+      </select>
+    </div>
+
+    <div id="topics" class="fade-in" style="animation-delay:.3s"></div>
+    <div id="tasks" class="fade-in" style="animation-delay:.4s"></div>
+
+    <form id="attendance-form" class="fade-in" style="animation-delay:.5s">
+      <label for="milestone">Milestone Covered:</label>
+      <input type="text" id="milestone" placeholder="Select a task or enter milestone" required style="padding:.75rem; border-radius:8px; border:1px solid #333; width:100%; margin-top:.5rem; background:#222; color:#eee;" />
+      <button type="submit" style="margin-top:.75rem;">Sign In</button>
+    </form>
+
+    <div class="fade-in" style="animation-delay:.6s">
+      <table>
+        <thead>
+          <tr><th>#</th><th>Timestamp</th><th>Milestone</th></tr>
+        </thead>
+        <tbody id="records"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const curriculum = {
+      1: [
+        { title: 'Architecture & Tech-Stack Deep Dive', tasks: [
+            'Sketch full-stack architecture diagram',
+            'Compare NestJS vs. Express pros/cons',
+            'List database options and justify choice'
+          ]},
+        { title: 'UTXO vs. Account Model', tasks: [
+            'Diagram Bitcoin UTXO flow',
+            'Diagram Ethereum account flow',
+            'Summarize key differences'
+          ]},
+        { title: 'Tokens & Layer-2', tasks: [
+            'List two L2 solutions and benefits',
+            'Review OpenZeppelin ERC-20 code',
+            'Explain sidechain vs. L2'
+          ]},
+        { title: 'Dev Environment Setup', tasks: [
+            'Initialize Git repo with Gitflow',
+            'Write Dockerfile for Express API',
+            'Configure ESLint, Prettier & Husky'
+          ]},
+        { title: 'Docker Compose & CI Stub', tasks: [
+            'Create docker-compose.yml for Postgres & Redis',
+            'Set up GitHub Actions for lint/build',
+            'Verify CI passes on commit'
+          ]},
+        { title: 'Scaffold Review & README', tasks: [
+            'Review scaffold code clarity',
+            'Document run instructions',
+            'Refine README structure'
+          ]},
+        { title: 'Catch-Up & Reflection', tasks: [
+            'Resolve outstanding blockers',
+            'Journal learnings and challenges'
+          ]}
+      ],
+      2: [
+        { title: 'Auth Fundamentals', tasks: [
+            'Explain JWT vs. session cookies',
+            'Implement JWT auth flow sketch',
+            'List pros/cons of each approach'
+          ]},
+        { title: 'Password Hashing & Tokens', tasks: [
+            'Integrate bcrypt hashing',
+            'Implement refresh token logic',
+            'Test token expiry scenarios'
+          ]},
+        { title: 'Express Auth API Endpoints', tasks: [
+            'Build register & login endpoints',
+            'Secure /auth/me route',
+            'Test with Postman'
+          ]},
+        { title: 'KYC Sandbox Integration', tasks: [
+            'Stub Onfido/Jumio flow',
+            'Mock file upload endpoint',
+            'Display KYC status in API'
+          ]},
+        { title: 'React Form & Validation', tasks: [
+            'Set up React Hook Form',
+            'Add Yup validation schema',
+            'Handle error messages'
+          ]},
+        { title: 'Auth Flow Testing', tasks: [
+            'Write unit tests for auth logic',
+            'Write integration tests for KYC stub',
+            'Ensure coverage >80%'
+          ]},
+        { title: 'Catch-Up & Reflection', tasks: [
+            'Fix any issues from tests',
+            'Journal auth learnings'
+          ]}
+      ]
+    };
+
+    const weekSelect = document.getElementById('week-select');
+    const topicsDiv = document.getElementById('topics');
+    const tasksDiv = document.getElementById('tasks');
+    const form = document.getElementById('attendance-form');
+    const recordsEl = document.getElementById('records');
+    let records = JSON.parse(localStorage.getItem('studyRecords') || '[]');
+
+    function renderRecords() {
+      recordsEl.innerHTML = '';
+      records.forEach((rec, i) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `<td>${i+1}</td><td>${new Date(rec.time).toLocaleString()}</td><td>${rec.milestone}</td>`;
+        recordsEl.appendChild(row);
+      });
+    }
+
+    weekSelect.addEventListener('change', () => {
+      const week = weekSelect.value;
+      topicsDiv.innerHTML = '';
+      tasksDiv.innerHTML = '';
+      if (curriculum[week]) {
+        curriculum[week].forEach((item, idx) => {
+          const btn = document.createElement('button');
+          btn.textContent = item.title;
+          btn.onclick = () => showTasks(week, idx);
+          topicsDiv.appendChild(btn);
+        });
+      }
+    });
+
+    function showTasks(week, idx) {
+      const item = curriculum[week][idx];
+      tasksDiv.innerHTML = `<h2>${item.title}</h2>`;
+      const ul = document.createElement('ul');
+      item.tasks.forEach(t => { const li = document.createElement('li'); li.textContent = t; ul.appendChild(li); });
+      tasksDiv.appendChild(ul);
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const m = document.getElementById('milestone').value.trim();
+      if (!m) return;
+      records.push({ time: Date.now(), milestone: m });
+      localStorage.setItem('studyRecords', JSON.stringify(records));
+      form.reset(); renderRecords();
+    });
+
+    renderRecords();
+  </script>
+</body>
+</html>
